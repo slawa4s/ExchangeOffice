@@ -1,49 +1,71 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.25;
 
-interface YourToken {
-    function transferFrom(address from, address to, uint256 value) external returns (bool);
-    function transfer(address to, uint256 value) external returns (bool);
-    function balanceOf(address who) external view returns (uint256);
-    function allowance(address owner, address spender) external view returns (uint256);
-}
-
 contract CurrencyExchangeOffice {
     address public owner;
-    address public yourTokenAddress; 
     uint256 public exchangeRate;
+    uint256 public donated;
+    mapping(address => uint256) public balances;
 
-    constructor(address _yourTokenAddress, uint256 _exchangeRate) {
+    constructor(uint256 _exchangeRate) {
         owner = msg.sender;
-        yourTokenAddress = _yourTokenAddress;
         exchangeRate = _exchangeRate;
+        donated = 0;
     }
 
+    /// @dev Get Office balance
+    function getOfficeBalance() public view returns (uint256) {
+        require(msg.sender == owner, "Only the owner can know real balance.");
+        return balances[address(this)];
+    }
+
+    /// @dev Get User balance
+    function getFakeBalance() public view returns (uint256) {
+        return balances[msg.sender];
+    }
+
+    /// @dev Refill Fake Tokens
+    /// @param amount The amount of fake tokens for refill
     function refill(uint256 amount) public {
         require(msg.sender == owner, "Only the owner can refill.");
-        YourToken(yourTokenAddress).transferFrom(msg.sender, address(this), amount);
+        // We have free fake tokens
+        balances[address(this)] += amount;
     }
 
-    function purchaseWithEther(uint256 amount) public payable {
-        require(msg.value >= amount * exchangeRate, "Insufficient Ether provided for the requested token amount");
-        YourToken(yourTokenAddress).transfer(msg.sender, amount);
+    /// @dev ETH donation :)
+    function donate() public payable {
+        donated += msg.value;
     }
 
-    function sellForEther(uint256 amount) public {
-        uint256 tokenBalance = YourToken(yourTokenAddress).balanceOf(msg.sender);
-        require(tokenBalance >= amount, "Insufficient token balance");
-        
+    /// @dev Buy Fake Tokens for ETH
+    /// @param amount The amount of fake tokens the user wants to buy
+    function purchaseFakeToken(uint256 amount) public payable {
+        require(msg.value >= amount * exchangeRate, "Your balance is low :(");
+        require(balances[address(this)] >= amount, "You can not buy so much tokens");
+
+        balances[address(this)] -= amount;
+        balances[msg.sender] += amount;
+    }
+
+    /// @dev Sells Fake Tokens for ETH
+    /// @param amount The amount of fake tokens the user wants to sell
+    function sellFakeToken(uint256 amount) public {
+        require(balances[msg.sender] >= amount, "Low token balance");
+
         uint256 ethAmount = amount / exchangeRate;
-        require(address(this).balance >= ethAmount, "Insufficient Ether balance in the contract");
-        
-        YourToken(yourTokenAddress).transferFrom(msg.sender, address(this), amount);
+        require(address(this).balance >= ethAmount, "Exchange Office currently unavailable ;)");
+
+        balances[msg.sender] -= amount;
+        balances[address(this)] += amount;
 
         payable(msg.sender).transfer(ethAmount);
     }
 
-    function withdrawEther(uint256 amount) public {
-        require(msg.sender == owner, "Only the owner can withdraw Ether");
-        require(address(this).balance >= amount, "Insufficient contract balance");
+    /// @dev Withdraw Fake Tokens for ETH
+    /// @param amount The amount of ETH the owner wants to withdraw
+    function withdrawFakeToken(uint256 amount) public {
+        require(msg.sender == owner, "Only the owner can withdraw");
+        require(address(this).balance >= amount, "Not enough token for withdraw");
         payable(owner).transfer(amount);
     }
 }
