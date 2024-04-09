@@ -11,4 +11,5 @@ Then you need to compile them by
 
 ```angular2html
 npx hardhat compile
+npx hardhat run scripts/deploy.js --network sepolia
 ```
