@@ -11,18 +11,18 @@ contract CurrencyExchangeOffice {
         exchangeRate = _exchangeRate;
     }
 
-    /// @dev Get Office balance
+    /// @dev Retrieves office's balance
     function getOfficeBalance() public view returns (uint256) {
         require(msg.sender == owner, "Only the owner can know real balance.");
         return balances[address(this)];
     }
 
-    /// @dev Get User balance
+    /// @dev Fetches user's balance
     function getFakeBalance() public view returns (uint256) {
         return balances[msg.sender];
     }
 
-    /// @dev Refill Fake Tokens
+    /// @dev Adds fake tokens to office
     /// @param amount The amount of fake tokens for refill
     function refill(uint256 amount) public {
         require(msg.sender == owner, "Only the owner can refill.");
