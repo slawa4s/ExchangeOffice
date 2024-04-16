@@ -4,13 +4,11 @@ pragma solidity 0.8.25;
 contract CurrencyExchangeOffice {
     address public owner;
     uint256 public exchangeRate;
-    uint256 public donated;
     mapping(address => uint256) public balances;
 
     constructor(uint256 _exchangeRate) {
         owner = msg.sender;
         exchangeRate = _exchangeRate;
-        donated = 0;
     }
 
     /// @dev Get Office balance
@@ -32,15 +30,9 @@ contract CurrencyExchangeOffice {
         balances[address(this)] += amount;
     }
 
-    /// @dev ETH donation :)
-    function donate() public payable {
-        donated += msg.value;
-    }
-
     /// @dev Buy Fake Tokens for ETH
-    /// @param amount The amount of fake tokens the user wants to buy
-    function purchaseFakeToken(uint256 amount) public payable {
-        require(msg.value >= amount * exchangeRate, "Your balance is low :(");
+    function purchaseFakeToken() public payable {
+        uint amount = msg.value / exchangeRate;
         require(balances[address(this)] >= amount, "You can not buy so much tokens");
 
         balances[address(this)] -= amount;
@@ -52,7 +44,7 @@ contract CurrencyExchangeOffice {
     function sellFakeToken(uint256 amount) public {
         require(balances[msg.sender] >= amount, "Low token balance");
 
-        uint256 ethAmount = amount / exchangeRate;
+        uint256 ethAmount = amount * exchangeRate;
         require(address(this).balance >= ethAmount, "Exchange Office currently unavailable ;)");
 
         balances[msg.sender] -= amount;
