@@ -37,3 +37,9 @@ Then you need to compile them by
 npx hardhat compile
 npx hardhat run scripts/deploy.js --network sepolia
 ```
+
+I was unable to deploy, due to "ProviderError: insufficient funds for gas * price + value".
+I'm unsure as to why this is happening (I have 1 ETH).
+To check, you need to uncomment `module.exports` in `hardhat.config.js`.
+
+![Proof of founds](proof_of_founds.png)
